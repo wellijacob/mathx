@@ -55,61 +55,89 @@ class MainController extends Controller
         // generation exercises
         $exercises = [];
         for ($index = 1; $index <= $numberExercises; $index++) {
-
-            $operation = $operations[array_rand($operations)];
-            $number1 = rand($min, $max);
-            $number2 = rand($min, $max);
-
-            $exercise = '';
-            $solution = '';
-
-            switch ($operation) {
-                case 'sum':
-                    $exercise = "$number1 + $number2 =";
-                    $solution = $number1 + $number2;
-                    break;
-
-                case 'subtraction':
-                    $exercise = "$number1 - $number2 =";
-                    $solution = $number1 - $number2;
-                    break;
-
-                case 'multiplication':
-                    $exercise = "$number1 x $number2 =";
-                    $solution = $number1 * $number2;
-                    break;
-
-                case 'division':
-                    // avoid division by zero
-                    if ($number2 == 0) {
-                        $number2 = 1;
-                    }
-
-                    $exercise = "$number1 / $number2 =";
-                    $solution = $number1 / $number2;
-                    break;
-            }
-
-            // if $solution is a float number, round it to 2 decimal places
-            if (is_float($solution)) {
-                $solution = round($solution, 2);
-            }
-
-            $exercises[] = [
-                'exercise_number' => $index,
-                'exercise' => $exercise,
-                'solution' => "$exercise $solution"
-            ];
+            $exercises[] = $this->generateExercise($index, $operations, $min, $max);
         }
+
+        // place exercises in session
+        session(['exercises' => $exercises]);
 
         //dd($request->all());
         //dd($exercises);
         return view('operations', ['exercises' => $exercises]);
     }
 
+    private function generateExercise($index, $operations, $min, $max): array
+    {
+        $operation = $operations[array_rand($operations)];
+        $number1 = rand($min, $max);
+        $number2 = rand($min, $max);
+
+        $exercise = '';
+        $solution = '';
+
+        switch ($operation) {
+            case 'sum':
+                $exercise = "$number1 + $number2 =";
+                $solution = $number1 + $number2;
+                break;
+
+            case 'subtraction':
+                $exercise = "$number1 - $number2 =";
+                $solution = $number1 - $number2;
+                break;
+
+            case 'multiplication':
+                $exercise = "$number1 x $number2 =";
+                $solution = $number1 * $number2;
+                break;
+
+            case 'division':
+                // avoid division by zero
+                if ($number2 == 0) {
+                    $number2 = 1;
+                }
+
+                $exercise = "$number1 / $number2 =";
+                $solution = $number1 / $number2;
+                break;
+        }
+
+        // if $solution is a float number, round it to 2 decimal places
+        if (is_float($solution)) {
+            $solution = round($solution, 2);
+        }
+
+        return [
+            'exercise_number' => $index,
+            'exercise' => $exercise,
+            'solution' => "$exercise $solution"
+        ];
+    }
+
     public function printExercises()
     {
-        echo "Imprimir exercícios";
+        // check if exercises are in session
+        if (!session()->has('exercises')) {
+            return redirect()->route('home');
+        }
+
+        $exercises = session('exercises');
+
+        echo '<pre>';
+        echo '<h1>Exercícios de Matemática (' . env('APP_NAME') . ')</h1>';
+        echo '<hr>';
+
+        foreach ($exercises as $exercise) {
+            echo '<h2><small>' . str_pad($exercise['exercise_number'], 2, '0', STR_PAD_LEFT) . '. ' . '</small>' . $exercise['exercise'] . '</h2>';
+        }
+
+        echo '<hr>';
+        echo '<h2>Soluções</h2>';
+        foreach ($exercises as $exercise) {
+            echo '<small>' . str_pad($exercise['exercise_number'], 2, '0', STR_PAD_LEFT) . '. ' . $exercise['solution'] . '</small><br>';
+        }
+
+        echo '</pre>';
     }
 
     public function exportExercises()
