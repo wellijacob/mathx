@@ -28,10 +28,22 @@ class MainController extends Controller
 
         // get selected operations
         $operations = [];
-        $operations[] = ($request->check_sum ?? null) ? 'sum' : null;
-        $operations[] = ($request->check_subtraction ?? null) ? 'subtraction' : null;
-        $operations[] = ($request->check_multiplication ?? null) ? 'multiplication' : null;
-        $operations[] = ($request->check_division ?? null) ? 'division' : null;
+
+        if ($request->check_sum) {
+            $operations[] = 'sum';
+        }
+
+        if ($request->check_subtraction) {
+            $operations[] = 'subtraction';
+        }
+
+        if ($request->check_multiplication) {
+            $operations[] = 'multiplication';
+        }
+
+        if ($request->check_division) {
+            $operations[] = 'division';
+        }
 
         // get numbers (min end max)
         $min = $request->number_one;
@@ -63,14 +75,24 @@ class MainController extends Controller
                     break;
 
                 case 'multiplication':
-                    $exercise = "$number1 * $number2 =";
+                    $exercise = "$number1 x $number2 =";
                     $solution = $number1 * $number2;
                     break;
 
                 case 'division':
+                    // avoid division by zero
+                    if ($number2 == 0) {
+                        $number2 = 1;
+                    }
+
                     $exercise = "$number1 / $number2 =";
                     $solution = $number1 / $number2;
                     break;
+            }
+
+            // if $solution is a float number, round it to 2 decimal places
+            if (is_float($solution)) {
+                $solution = round($solution, 2);
             }
 
             $exercises[] = [
